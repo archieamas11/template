@@ -242,6 +242,14 @@ export default function ResidentsTable() {
         size: 32,
       },
       {
+        accessorKey: "id",
+        header: ({ column }) => (
+          <DataTableColumnHeader column={column} title="ID" />
+        ),
+        enableSorting: true,
+        meta: { label: "ID" },
+      },
+      {
         accessorKey: "first_name",
         header: ({ column }) => (
           <DataTableColumnHeader column={column} title="First Name" />
