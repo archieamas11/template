@@ -1,28 +1,35 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { z } from 'zod';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Input } from '@/components/ui/input';
 import { AuthService } from '@/services/auth.api';
 
 const schema = z.object({
   username: z.string().min(1, 'Username is required'),
   password: z.string().min(1, 'Password is required'),
+  remember: z.boolean().optional(),
 });
 
 type FormValues = z.infer<typeof schema>;
 
 export function LoginPage() {
   const navigate = useNavigate();
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const {
-    register,
-    handleSubmit,
-    formState: { errors, isSubmitting },
-  } = useForm<FormValues>({
+  const form = useForm<FormValues>({
     resolver: zodResolver(schema),
+    defaultValues: {
+      username: '',
+      password: '',
+      remember: false,
+    },
   });
+
+  const { isSubmitting } = form.formState;
 
   // If token exists, validate and redirect to dashboard
   useEffect(() => {
@@ -32,85 +39,121 @@ export function LoginPage() {
     }
 
     const promise = AuthService.me();
+
     toast.promise(promise, {
       loading: 'Checking session…',
-      success: 'Already signed in',
-      error: 'Session expired, please login',
-    });
-
-    promise
-      .then(({ user }) => {
+      success: (data) => {
+        const { user } = data;
         if (Number(user?.isAdmin) === 1) {
           navigate('/admin', { replace: true });
         } else {
           navigate('/dashboard', { replace: true });
         }
-      })
-      .catch(() => {
+        return 'Already signed in';
+      },
+      error: (_error) => {
         localStorage.removeItem('token');
-      });
+        return 'Session expired, please login';
+      },
+    });
   }, [navigate]);
 
   const onSubmit = async (values: FormValues) => {
-    setErrorMessage(null);
-
-    const promise = AuthService.login(values);
-
-    toast.promise(promise, {
-      loading: 'Signing in…',
-      success: 'Welcome back',
-      error: 'Login failed. Please try again.',
-    });
-
-    try {
-      const { token, user } = await promise;
-      localStorage.setItem('token', token);
-      if (Number(user?.isAdmin) === 1) {
-        navigate('/admin');
-      } else {
-        navigate('/dashboard');
+    // 🕒 Await the promise so this async function contains an await expression
+    await toast.promise(
+      AuthService.login(values)
+        .then(({ token, user }) => {
+          localStorage.setItem('token', token);
+          if (Number(user?.isAdmin) === 1) {
+            navigate('/admin');
+          } else {
+            navigate('/dashboard');
+          }
+          return { token, user };
+        })
+        .catch((error) => {
+          if (typeof error === 'object' && error !== null) {
+            const axiosError = error as { response?: { data?: { message?: string } } };
+            if (axiosError.response?.data?.message) {
+              throw new Error(axiosError.response.data.message);
+            }
+          }
+          throw new Error('Login failed. Please try again.');
+        }),
+      {
+        loading: 'Signing in…',
+        success: () => 'Welcome back',
+        duration: 500,
+        error: (error) => error.message,
       }
-    } catch (error: unknown) {
-      let message = 'Login failed. Please try again.';
-      if (typeof error === 'object' && error !== null) {
-        const maybeAxiosErr = error as { response?: { data?: { message?: string } } };
-        if (maybeAxiosErr.response?.data?.message) {
-          message = String(maybeAxiosErr.response.data.message);
-        }
-      }
-      setErrorMessage(message);
-    }
+    );
   };
 
   return (
-    <div className="mx-auto grid max-w-sm gap-6 p-6">
-      <h1 className="text-center font-bold text-2xl">Login</h1>
-      {errorMessage && <div className="rounded-md border border-red-200 bg-red-50 p-3 text-red-700 text-sm">{errorMessage}</div>}
-      <form className="grid gap-4" onSubmit={handleSubmit(onSubmit)}>
-        <label className="grid gap-1">
-          <span>Username</span>
-          <input aria-label="username" autoComplete="username" className="h-10 rounded-md border px-3" type="text" {...register('username')} />
-          {errors.username && <span className="text-destructive text-sm">{errors.username.message}</span>}
-        </label>
-        <label className="grid gap-1">
-          <span>Password</span>
-          <input
-            aria-label="password"
-            autoComplete="current-password"
-            className="h-10 rounded-md border px-3"
-            type="password"
-            {...register('password')}
-          />
-          {errors.password && <span className="text-destructive text-sm">{errors.password.message}</span>}
-        </label>
-        <button
-          className="inline-flex h-10 items-center justify-center rounded-md bg-primary px-5 font-medium text-primary-foreground text-sm"
-          disabled={isSubmitting}
-          type="submit"
-        >
-          {isSubmitting ? 'Signing in…' : 'Login'}
-        </button>
-      </form>
+    <div className="flex min-h-screen items-center justify-center">
+      <Card className="mx-auto w-full max-w-sm p-8">
+        <Form {...form}>
+          <form className="space-y-4" onSubmit={form.handleSubmit(onSubmit)}>
+            <FormField
+              control={form.control}
+              name="username"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Username</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Enter your username" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="password"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Password</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Enter your password" type="password" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <div className="flex items-center justify-between">
+              <FormField
+                control={form.control}
+                name="remember"
+                render={({ field }) => (
+                  <FormItem className="flex items-center space-x-2">
+                    <FormControl>
+                      <Input
+                        checked={field.value}
+                        className="h-4 w-4"
+                        id="remember"
+                        onChange={(e) => field.onChange(e.target.checked)}
+                        type="checkbox"
+                      />
+                    </FormControl>
+                    <FormLabel className="mb-0 cursor-pointer text-muted-foreground" htmlFor="remember">
+                      Remember me
+                    </FormLabel>
+                  </FormItem>
+                )}
+              />
+              <a className="text-muted-foreground text-sm hover:underline" href="/forgot-password" tabIndex={0}>
+                Forgot password?
+              </a>
+            </div>
+
+            <Button className="w-full" disabled={isSubmitting} type="submit">
+              {isSubmitting ? 'Signing in…' : 'Login'}
+            </Button>
+          </form>
+        </Form>
+      </Card>
     </div>
   );
 }

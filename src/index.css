@@ -119,3 +119,15 @@
     @apply bg-background text-foreground;
   }
 }
+
+:root {
+  --gradient-layer-1: rgba(70, 85, 110, 0.5);
+  --gradient-layer-2: rgba(99, 101, 241, 0.664);
+  --gradient-layer-3: rgba(181, 184, 208, 0.3);
+}
+
+.dark {
+  --gradient-layer-1: rgba(70, 85, 110, 0.3);
+  --gradient-layer-2: rgba(99, 102, 241, 0.2);
+  --gradient-layer-3: rgba(181, 184, 208, 0.1);
+}
