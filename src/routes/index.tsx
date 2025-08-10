@@ -12,7 +12,7 @@ import AdminUsersPage from '@/pages/dashboard/admin/users';
 import { UserDashboardPage } from '@/pages/dashboard/user/user';
 import { LandingPage } from '@/pages/public/landing';
 import { UnauthorizedPage } from '@/pages/public/unauthorized';
-import { AuthService } from '@/services/api';
+import { AuthService } from '@/services/resident.api';
 
 function useAuth() {
   const [authLoading, setAuthLoading] = useState(true);

@@ -13,10 +13,10 @@ import { toast } from "sonner";
 
 import {
   ResidentsService,
-  type Resident,
   type ResidentsQuery,
   type Paginated,
-} from "@/services/api";
+  type Resident
+} from "@/services/resident.api";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -37,14 +37,10 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet";
 import { ResidentForm, type ResidentFormValues } from "./ResidentForm";
 import { MoreHorizontal } from "lucide-react";
+import { Suspense, lazy } from "react";
+const ViewResident = lazy(() => import("./ViewResident"));
 
 // ✅ Indeterminate checkbox for header/rows selection
 const IndeterminateCheckbox = React.forwardRef<
@@ -478,57 +474,12 @@ export default function ResidentsTable() {
       </Dialog>
 
       {/* View drawer */}
-      <Sheet open={!!viewing} onOpenChange={(o) => !o && setViewing(null)}>
-        <SheetContent>
-          <SheetHeader>
-            <SheetTitle>Resident Details</SheetTitle>
-          </SheetHeader>
-          {viewing && (
-            <div className="mt-4 space-y-2 text-sm">
-              <div>
-                <span className="font-medium">Name: </span>
-                {viewing.first_name} {viewing.middle_name ?? ""} {viewing.last_name}
-              </div>
-              <div>
-                <span className="font-medium">Age: </span>
-                {viewing.age}
-              </div>
-              <div>
-                <span className="font-medium">Gender: </span>
-                {viewing.gender}
-              </div>
-              <div>
-                <span className="font-medium">Barangay: </span>
-                {viewing.barangay}
-              </div>
-              <div>
-                <span className="font-medium">Address: </span>
-                {viewing.address}
-              </div>
-              <div>
-                <span className="font-medium">Occupation: </span>
-                {viewing.occupation ?? "-"}
-              </div>
-              <div>
-                <span className="font-medium">Civil Status: </span>
-                {viewing.civil_status}
-              </div>
-              <div>
-                <span className="font-medium">Contact #: </span>
-                {viewing.contact_number ?? "-"}
-              </div>
-              <div>
-                <span className="font-medium">Created: </span>
-                {viewing.created_at ?? "-"}
-              </div>
-              <div>
-                <span className="font-medium">Updated: </span>
-                {viewing.updated_at ?? "-"}
-              </div>
-            </div>
-          )}
-        </SheetContent>
-      </Sheet>
+      <Suspense fallback={<div>Loading...</div>}>
+        <ViewResident
+          viewing={viewing}
+          onClose={() => setViewing(null)}
+        />
+      </Suspense>
     </Card>
   );
 }

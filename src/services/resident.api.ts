@@ -1,30 +1,4 @@
-import axios from 'axios';
-
-const api = axios.create({
-  baseURL: 'http://localhost/backend',
-  headers: { 'Content-Type': 'application/json' },
-  withCredentials: false,
-});
-
-api.interceptors.request.use((config) => {
-  const token = localStorage.getItem('token');
-  if (token) {
-    config.headers = config.headers ?? {};
-    (config.headers as Record<string, string>).Authorization = `Bearer ${token}`;
-  }
-  return config;
-});
-
-export const AuthService = {
-  async login(data: { username: string; password: string }) {
-    const res = await api.post('/auth/login.php', data);
-    return res.data as { token: string; user: { id: number; username: string; isAdmin: number } };
-  },
-  async me() {
-    const res = await api.get('/auth/me.php');
-    return res.data as { user: { id: number; username: string; isAdmin: number } };
-  },
-};
+import { api } from '@/services/axios.service';
 
 export type Resident = {
   id: number;
@@ -62,21 +36,19 @@ export type Paginated<T> = {
 
 export const ResidentsService = {
   async list(params: ResidentsQuery) {
-    const res = await api.get('/residents/index.php', { params });
+    const res = await api.get('residents/index.php', { params });
     return res.data as Paginated<Resident>;
   },
   async create(payload: Omit<Resident, 'id' | 'created_at' | 'updated_at'>) {
-    const res = await api.post('/residents/create.php', payload);
+    const res = await api.post('residents/create.php', payload);
     return res.data as { message: string; resident: Resident };
   },
   async update(id: number, payload: Partial<Omit<Resident, 'id' | 'created_at' | 'updated_at'>>) {
-    const res = await api.put(`/residents/update.php?id=${id}`, payload);
+    const res = await api.put(`residents/update.php?id=${id}`, payload);
     return res.data as { message: string; resident: Resident };
   },
   async delete(id: number) {
-    const res = await api.delete(`/residents/delete.php?id=${id}`);
+    const res = await api.delete(`residents/delete.php?id=${id}`);
     return res.data as { message: string };
   },
 };
-
-export default api;

@@ -51,7 +51,7 @@ export function NavUser({
       setTimeout(() => {
         navigate('/', { replace: true })
         resolve()
-      }, 100)
+      }, 1000)
     })
 
     toast.promise(action, {

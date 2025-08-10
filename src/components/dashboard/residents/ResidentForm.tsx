@@ -1,7 +1,6 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import * as React from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
@@ -16,7 +15,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import type { Resident } from "@/services/api";
+import { type Resident } from "@/services/resident.api";
 
 const formSchema = z.object({
   first_name: z.string().min(1, "First name is required"),
@@ -24,7 +23,7 @@ const formSchema = z.object({
   middle_name: z.string().optional().nullable(),
   age: z.coerce.number().int().min(0, "Age must be a positive number"),
   gender: z.enum(["Male", "Female"], {
-    required_error: "Gender is required",
+    message: "Gender is required",
   }),
   address: z.string().min(1, "Address is required"),
   barangay: z.string().min(1, "Barangay is required"),
@@ -52,18 +51,18 @@ export function ResidentForm({
     formState: { errors, isSubmitting },
     setValue,
   } = useForm<ResidentFormValues>({
-    resolver: zodResolver(formSchema),
+    resolver: zodResolver(formSchema) as any, // 🛠️ Type workaround for zodResolver inference issue with z.coerce
     defaultValues: {
       first_name: defaultValues?.first_name ?? "",
       last_name: defaultValues?.last_name ?? "",
       middle_name: defaultValues?.middle_name ?? "",
-      age: (defaultValues?.age as number | undefined) ?? 0,
-      gender: (defaultValues?.gender as Resident["gender"]) ?? "Male",
+      age: typeof defaultValues?.age === "number" ? defaultValues.age : 0,
+      gender: (defaultValues?.gender as ResidentFormValues["gender"]) ?? "Male",
       address: defaultValues?.address ?? "",
       barangay: defaultValues?.barangay ?? "",
       contact_number: defaultValues?.contact_number ?? "",
       occupation: defaultValues?.occupation ?? "",
-      civil_status: (defaultValues?.civil_status as Resident["civil_status"]) ?? "Single",
+      civil_status: (defaultValues?.civil_status as ResidentFormValues["civil_status"]) ?? "Single",
     },
   });
 

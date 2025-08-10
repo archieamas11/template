@@ -5,7 +5,6 @@ export function LogoutPage() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // 🧹 Clear auth state then redirect
     localStorage.removeItem('token');
     const id = setTimeout(() => navigate('/login', { replace: true }), 50);
     return () => clearTimeout(id);

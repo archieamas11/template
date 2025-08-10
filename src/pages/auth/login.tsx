@@ -4,7 +4,7 @@ import { useForm } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { z } from 'zod';
-import { AuthService } from '@/services/api';
+import { AuthService } from '@/services/auth.api';
 
 const schema = z.object({
   username: z.string().min(1, 'Username is required'),
