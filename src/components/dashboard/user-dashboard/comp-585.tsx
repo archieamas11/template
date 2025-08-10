@@ -7,9 +7,9 @@ import {
   UsersRound,
 } from "lucide-react"
 
-import Logo from "@/components/logo"
-import NotificationMenu from "@/components/notification-menu"
-import UserMenu from "@/components/user-menu"
+import Logo from "@/components/sidebar/logo"
+import NotificationMenu from "@/components/sidebar/notification-menu"
+import UserMenu from "@/components/sidebar/user-menu"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import {

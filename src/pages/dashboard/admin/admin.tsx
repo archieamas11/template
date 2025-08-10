@@ -1,4 +1,4 @@
-import ResidentsTable from '@/components/dashboard/residents/ResidentsTable';
+import ResidentsTable from '@/components/dashboard/admin-dashboard/residents/ResidentsTable';
 import AdminLayout from '@/components/layouts/admin-layout';
 
 export function AdminDashboardPage() {

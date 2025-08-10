@@ -1,10 +1,13 @@
 import type { ReactNode } from 'react'
 import { useMemo } from 'react'
 import { useLocation, Link } from 'react-router-dom'
-import { AppSidebar } from '@/components/app-sidebar'
+import { AppSidebar } from '@/components/sidebar/app-sidebar'
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from '@/components/ui/breadcrumb'
 import { Separator } from '@/components/ui/separator'
 import { SidebarInset, SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar'
+import { type User } from '@/services/auth.api'
+import { ThemeToggleButton } from '@/components/ui/theme-toggle-button';
+import Notification from '../ui/notification-button'
 
 interface AdminLayoutProps { children: ReactNode }
 
@@ -25,11 +28,14 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
     return segments
   }, [location.pathname])
 
+  // ⚡️ Replace this with your actual user retrieval logic (e.g., from context or props)
+  const user = {} as User;
+
   return (
     <SidebarProvider>
-      <AppSidebar />
+      <AppSidebar user={user} />
       <SidebarInset>
-        <header className="flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12">
+        <header className="flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12 justify-between pr-4">
           <div className="flex items-center gap-2 px-4">
             <SidebarTrigger className="-ml-1" />
             <Separator orientation="vertical" className="mr-2 data-[orientation=vertical]:h-4" />
@@ -54,7 +60,11 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
               </BreadcrumbList>
             </Breadcrumb>
           </div>
-        </header>
+            <div className="flex items-center gap-2">
+              <ThemeToggleButton start="top-right" variant="circle-blur" />
+              <Notification />
+            </div>
+          </header>
         <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
           {children}
         </div>

@@ -4,9 +4,7 @@ import {
   BadgeCheck,
   Bell,
   ChevronsUpDown,
-  CreditCard,
   LogOut,
-  Sparkles,
 } from "lucide-react"
 
 import {
@@ -31,13 +29,14 @@ import {
 } from "@/components/ui/sidebar"
 import { useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
-
+import { type User } from '@/services/auth.api'
+import { cn } from '../../lib/utils';
 export function NavUser({
   user,
 }: {
-  user: {
-    name: string
-    email: string
+  user: User & {
+    username: string
+    isAdmin: number
     avatar: string
   }
 }) {
@@ -48,16 +47,15 @@ export function NavUser({
     const action = new Promise<void>((resolve) => {
       // Clear token and redirect. Use a short timeout to allow toast to render.
       localStorage.removeItem('token')
-      setTimeout(() => {
         navigate('/', { replace: true })
         resolve()
-      }, 1000)
     })
 
     toast.promise(action, {
       loading: 'Logging out...',
       success: 'Logged out successfully',
       error: 'Failed to log out',
+      duration: 500,
     })
   }
 
@@ -71,12 +69,12 @@ export function NavUser({
               className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
             >
               <Avatar className="h-8 w-8 rounded-lg">
-                <AvatarImage src={user.avatar} alt={user.name} />
+                <AvatarImage src={user.avatar} alt={user.username} />
                 <AvatarFallback className="rounded-lg">CN</AvatarFallback>
               </Avatar>
               <div className="grid flex-1 text-left text-sm leading-tight">
-                <span className="truncate font-medium">{user.name}</span>
-                <span className="truncate text-xs">{user.email}</span>
+                <span className="truncate font-medium">{user.username}</span>
+                <span className={cn("truncate text-xs")}>{user.isAdmin === 1 ? 'User' : 'Admin'}</span>
               </div>
               <ChevronsUpDown className="ml-auto size-4" />
             </SidebarMenuButton>
@@ -90,31 +88,20 @@ export function NavUser({
             <DropdownMenuLabel className="p-0 font-normal">
               <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
                 <Avatar className="h-8 w-8 rounded-lg">
-                  <AvatarImage src={user.avatar} alt={user.name} />
+                  <AvatarImage src={user.avatar} alt={user.username} />
                   <AvatarFallback className="rounded-lg">CN</AvatarFallback>
                 </Avatar>
                 <div className="grid flex-1 text-left text-sm leading-tight">
-                  <span className="truncate font-medium">{user.name}</span>
-                  <span className="truncate text-xs">{user.email}</span>
-                </div>
+                  <span className="truncate font-medium">{user.username}</span>
+                  <span className={cn("truncate text-xs")}>{user.isAdmin === 1 ? 'Admin' : 'User'}</span>
+                  </div>
               </div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
               <DropdownMenuItem>
-                <Sparkles />
-                Upgrade to Pro
-              </DropdownMenuItem>
-            </DropdownMenuGroup>
-            <DropdownMenuSeparator />
-            <DropdownMenuGroup>
-              <DropdownMenuItem>
                 <BadgeCheck />
                 Account
-              </DropdownMenuItem>
-              <DropdownMenuItem>
-                <CreditCard />
-                Billing
               </DropdownMenuItem>
               <DropdownMenuItem>
                 <Bell />
