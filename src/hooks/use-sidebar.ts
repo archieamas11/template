@@ -1,15 +1,17 @@
-import { create } from "zustand";
-import { persist, createJSONStorage } from "zustand/middleware";
-import { produce } from "immer";
+import { create } from 'zustand';
+import { createJSONStorage, persist } from 'zustand/middleware';
 
 type SidebarSettings = { disabled: boolean; isHoverOpen: boolean };
 type SidebarStore = {
   isOpen: boolean;
   isHover: boolean;
+  // Keep sidebar expanded when interactive overlays (e.g., dropdowns) are open
+  hoverLock: boolean;
   settings: SidebarSettings;
   toggleOpen: () => void;
   setIsOpen: (isOpen: boolean) => void;
   setIsHover: (isHover: boolean) => void;
+  setHoverLock: (locked: boolean) => void;
   getOpenState: () => boolean;
   setSettings: (settings: Partial<SidebarSettings>) => void;
 };
@@ -17,9 +19,10 @@ type SidebarStore = {
 export const useSidebar = create(
   persist<SidebarStore>(
     (set, get) => ({
-      isOpen: true,
+      isOpen: false,
       isHover: false,
-      settings: { disabled: false, isHoverOpen: false },
+      hoverLock: false,
+      settings: { disabled: false, isHoverOpen: true },
       toggleOpen: () => {
         set({ isOpen: !get().isOpen });
       },
@@ -29,21 +32,21 @@ export const useSidebar = create(
       setIsHover: (isHover: boolean) => {
         set({ isHover });
       },
+      setHoverLock: (locked: boolean) => {
+        set({ hoverLock: locked });
+      },
       getOpenState: () => {
         const state = get();
-        return state.isOpen || (state.settings.isHoverOpen && state.isHover);
+        // Sidebar is considered open if: manually opened OR (hover-open enabled and hovering) OR temporarily locked by an open overlay
+        return state.isOpen || (state.settings.isHoverOpen && state.isHover) || state.hoverLock;
       },
       setSettings: (settings: Partial<SidebarSettings>) => {
-        set(
-          produce((state: SidebarStore) => {
-            state.settings = { ...state.settings, ...settings };
-          })
-        );
-      }
+        set((state) => ({ settings: { ...state.settings, ...settings } }));
+      },
     }),
     {
-      name: "sidebar",
-      storage: createJSONStorage(() => localStorage)
+      name: 'sidebar:v2',
+      storage: createJSONStorage(() => localStorage),
     }
   )
 );

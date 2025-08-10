@@ -1,11 +1,8 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from 'react';
 /**
  * This hook fix hydration when use persist to save hook data to localStorage
  */
-export const useStore = <T, F>(
-  store: (callback: (state: T) => unknown) => unknown,
-  callback: (state: T) => F
-) => {
+export const useStore = <T, F>(store: (selector: (state: T) => unknown) => unknown, callback: (state: T) => F) => {
   const result = store(callback) as F;
   const [data, setData] = useState<F>();
 
