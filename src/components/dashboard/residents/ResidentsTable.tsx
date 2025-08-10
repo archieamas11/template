@@ -44,6 +44,7 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { ResidentForm, type ResidentFormValues } from "./ResidentForm";
+import { MoreHorizontal } from "lucide-react";
 
 // ✅ Indeterminate checkbox for header/rows selection
 const IndeterminateCheckbox = React.forwardRef<
@@ -101,14 +102,16 @@ export default function ResidentsTable() {
       : "asc"
     : undefined;
 
+  // Extract first selected value from filter (supports string or array)
+  const toSingleValue = (value: unknown): string | undefined => {
+    if (Array.isArray(value)) return (value[0] as string) || undefined;
+    return typeof value === "string" ? (value || undefined) : undefined;
+  };
+
   const genderFilter = columnFilters.find((f) => f.id === "gender");
   const barangayFilter = columnFilters.find((f) => f.id === "barangay");
-  const gender = Array.isArray(genderFilter?.value)
-    ? (genderFilter?.value?.[0] as Resident["gender"]) || undefined
-    : undefined;
-  const barangay = typeof barangayFilter?.value === "string"
-    ? (barangayFilter?.value as string) || undefined
-    : undefined;
+  const gender = toSingleValue(genderFilter?.value) as Resident["gender"] | undefined;
+  const barangay = toSingleValue(barangayFilter?.value);
 
   const params = useMemo(
     () => ({
@@ -309,17 +312,19 @@ export default function ResidentsTable() {
       },
       {
         id: "actions",
-        header: () => <span>Actions</span>,
         enableHiding: false,
         cell: ({ row }) => {
           const r = row.original;
           return (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button size="sm" variant="ghost">Actions</Button>
+                <Button className="h-8 w-8 p-0" variant="ghost">
+                  <span className="sr-only">Open menu</span>
+                  <MoreHorizontal />
+                </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem onSelect={() => setViewing(r)}>View</DropdownMenuItem>
+              <DropdownMenuContent className="z-50" align="end">
+              <DropdownMenuItem onSelect={() => setViewing(r)}>View</DropdownMenuItem>
                 <DropdownMenuItem onSelect={() => setEditing(r)}>Edit</DropdownMenuItem>
                 <DropdownMenuItem
                   variant="destructive"
