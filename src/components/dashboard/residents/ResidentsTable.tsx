@@ -4,6 +4,7 @@ import type {
   ColumnFiltersState,
   PaginationState,
   SortingState,
+  RowSelectionState,
 } from "@tanstack/react-table";
 import { getCoreRowModel, useReactTable } from "@tanstack/react-table";
 import { useMemo } from "react";
@@ -23,6 +24,50 @@ import { DataTable } from "@/components/data-table/data-table";
 import { DataTableToolbar } from "@/components/data-table/data-table-toolbar";
 import { DataTableColumnHeader } from "@/components/data-table/data-table-column-header";
 import { DataTableSkeleton } from "@/components/data-table/data-table-skeleton";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
+import { ResidentForm, type ResidentFormValues } from "./ResidentForm";
+
+// ✅ Indeterminate checkbox for header/rows selection
+const IndeterminateCheckbox = React.forwardRef<
+  HTMLInputElement,
+  React.InputHTMLAttributes<HTMLInputElement> & { indeterminate?: boolean }
+>(({ indeterminate, ...props }, ref) => {
+  const localRef = React.useRef<HTMLInputElement>(null);
+  const resolvedRef = (ref as React.RefObject<HTMLInputElement>) ?? localRef;
+
+  React.useEffect(() => {
+    if (resolvedRef.current) {
+      resolvedRef.current.indeterminate = Boolean(indeterminate) && !props.checked;
+    }
+  }, [indeterminate, props.checked, resolvedRef]);
+
+  return (
+    <input
+      ref={resolvedRef}
+      type="checkbox"
+      {...props}
+    />
+  );
+});
+IndeterminateCheckbox.displayName = "IndeterminateCheckbox";
 
 function useResidents(params: ResidentsQuery) {
   return useQuery<Paginated<Resident>>({
@@ -45,6 +90,7 @@ export default function ResidentsTable() {
     pageIndex: 0,
     pageSize: 10,
   });
+  const [rowSelection, setRowSelection] = React.useState<RowSelectionState>({});
 
   // Derive API params from table state
   const sortBy: ResidentsQuery["sortBy"] | undefined =
@@ -79,6 +125,22 @@ export default function ResidentsTable() {
 
   const { data, isLoading, isFetching } = useResidents(params);
   const queryClient = useQueryClient();
+
+  // Build dynamic Barangay options from current page data
+  const barangayOptions = React.useMemo(
+    () =>
+      Array.from(
+        new Set((data?.data ?? []).map((r) => r.barangay).filter(Boolean)),
+      )
+        .sort((a, b) => a.localeCompare(b))
+        .map((b) => ({ label: b, value: b })),
+    [data],
+  );
+
+  // Dialog / Drawer state
+  const [openCreate, setOpenCreate] = React.useState(false);
+  const [editing, setEditing] = React.useState<Resident | null>(null);
+  const [viewing, setViewing] = React.useState<Resident | null>(null);
 
   // Mutations (optimistic)
   const createMutation = useMutation({
@@ -133,9 +195,52 @@ export default function ResidentsTable() {
     },
   });
 
+  const archiveMutation = useMutation({
+    mutationFn: (id: number) => ResidentsService.delete(id),
+    onMutate: async (id) => {
+      const key = ["residents", params] as const;
+      await queryClient.cancelQueries({ queryKey: key });
+      const prev = queryClient.getQueryData<Paginated<Resident>>(key);
+      const optimistic: Paginated<Resident> | undefined = prev
+        ? { ...prev, data: prev.data.filter((r) => r.id !== id), total: Math.max(0, (prev.total ?? 0) - 1) }
+        : prev;
+      if (optimistic) queryClient.setQueryData(key, optimistic);
+      return { prev } as const;
+    },
+    onError: (_err, _vars, ctx) => {
+      if (ctx?.prev) queryClient.setQueryData(["residents", params], ctx.prev);
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ["residents"] });
+    },
+  });
+
   // Columns
-  const columns = React.useMemo<ColumnDef<Resident>[]>(
-    () => [
+  const columns = React.useMemo<ColumnDef<Resident>[]>
+    (() => [
+      // Selection column
+      {
+        id: "select",
+        header: ({ table }) => (
+          <IndeterminateCheckbox
+            aria-label="Select all rows"
+            checked={table.getIsAllPageRowsSelected()}
+            indeterminate={table.getIsSomePageRowsSelected()}
+            onChange={table.getToggleAllPageRowsSelectedHandler()}
+          />
+        ),
+        cell: ({ row }) => (
+          <IndeterminateCheckbox
+            aria-label={`Select row ${row.index + 1}`}
+            checked={row.getIsSelected()}
+            onChange={row.getToggleSelectedHandler()}
+            disabled={!row.getCanSelect?.()}
+          />
+        ),
+        enableSorting: false,
+        enableHiding: false,
+        size: 32,
+      },
       {
         accessorKey: "first_name",
         header: ({ column }) => (
@@ -159,7 +264,7 @@ export default function ResidentsTable() {
         ),
         enableSorting: true,
         enableColumnFilter: true,
-        meta: { label: "Barangay", variant: "text", placeholder: "Barangay" },
+        meta: { label: "Barangay", variant: "select", options: barangayOptions },
       },
       {
         accessorKey: "age",
@@ -201,31 +306,36 @@ export default function ResidentsTable() {
         cell: ({ row }) => {
           const r = row.original;
           return (
-            <div className="flex items-center gap-1">
-              <Button
-                size="sm"
-                variant="ghost"
-                onClick={() => {
-                  const nextJob = r.occupation ? null : "Updated Job";
-                  toast.promise(
-                    updateMutation.mutateAsync({ id: r.id, data: { occupation: nextJob } }),
-                    {
-                      loading: "Updating...",
-                      success: "Updated",
-                      error: "Update failed",
-                    },
-                  );
-                }}
-              >
-                Toggle Occupation
-              </Button>
-              {isFetching && <span className="text-xs text-muted-foreground">…</span>}
-            </div>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button size="sm" variant="ghost">Actions</Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onSelect={() => setViewing(r)}>View</DropdownMenuItem>
+                <DropdownMenuItem onSelect={() => setEditing(r)}>Edit</DropdownMenuItem>
+                <DropdownMenuItem
+                  variant="destructive"
+                  onSelect={(e) => {
+                    e.preventDefault();
+                    const doArchive = async () => {
+                      await archiveMutation.mutateAsync(r.id);
+                    };
+                    toast.promise(doArchive(), {
+                      loading: "Archiving resident...",
+                      success: "Resident archived",
+                      error: "Failed to archive resident",
+                    });
+                  }}
+                >
+                  Archive
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           );
         },
       },
     ],
-    [updateMutation, isFetching],
+    [archiveMutation, barangayOptions],
   );
 
   const table = useReactTable({
@@ -235,10 +345,14 @@ export default function ResidentsTable() {
       sorting,
       columnFilters,
       pagination,
+      rowSelection,
     },
     manualSorting: true,
     manualFiltering: true,
     manualPagination: true,
+    enableRowSelection: true,
+    enableMultiRowSelection: true,
+    getRowId: (row) => String(row.id),
     pageCount: data ? Math.max(1, Math.ceil(data.total / data.pageSize)) : -1,
     onSortingChange: (updater) => {
       setPagination((p) => ({ ...p, pageIndex: 0 }));
@@ -255,30 +369,9 @@ export default function ResidentsTable() {
         typeof updater === "function" ? updater(pagination) : updater;
       setPagination(next);
     },
+    onRowSelectionChange: setRowSelection,
     getCoreRowModel: getCoreRowModel(),
   });
-
-  const handleCreate = () => {
-    const payload = {
-      first_name: "New",
-      last_name: "Resident",
-      middle_name: null,
-      age: 30,
-      gender: "Male" as const,
-      address: "Unknown",
-      barangay: "Barangay 1",
-      contact_number: null,
-      occupation: null,
-      civil_status: "Single" as const,
-      created_by: 1,
-    } satisfies Omit<Resident, "id" | "created_at" | "updated_at">;
-
-    toast.promise(createMutation.mutateAsync(payload), {
-      loading: "Adding resident...",
-      success: "Resident added",
-      error: "Failed to add resident",
-    });
-  };
 
   // Loading skeleton
   if (isLoading && !data) {
@@ -306,17 +399,123 @@ export default function ResidentsTable() {
             {isFetching && (
               <span className="text-xs text-muted-foreground">Refreshing…</span>
             )}
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleCreate}
-              disabled={createMutation.isPending}
-            >
-              Add Resident
-            </Button>
+            <Dialog open={openCreate} onOpenChange={setOpenCreate}>
+              <DialogTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={createMutation.isPending}
+                >
+                  Add Resident
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Add Resident</DialogTitle>
+                </DialogHeader>
+                <ResidentForm
+                  onSubmit={async (vals: ResidentFormValues) => {
+                    const payload = {
+                      ...vals,
+                      middle_name: vals.middle_name ?? null,
+                      contact_number: vals.contact_number ?? null,
+                      occupation: vals.occupation ?? null,
+                      created_by: 1,
+                    } satisfies Omit<Resident, "id" | "created_at" | "updated_at">;
+                    await toast.promise(createMutation.mutateAsync(payload), {
+                      loading: "Adding resident...",
+                      success: "Resident added",
+                      error: "Failed to add resident",
+                    });
+                    setOpenCreate(false);
+                  }}
+                />
+              </DialogContent>
+            </Dialog>
           </div>
         </DataTableToolbar>
       </DataTable>
+
+      {/* Edit dialog */}
+      <Dialog open={!!editing} onOpenChange={(o) => !o && setEditing(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit Resident</DialogTitle>
+          </DialogHeader>
+          {editing && (
+            <ResidentForm
+              defaultValues={editing}
+              submitLabel="Update"
+              loading={updateMutation.isPending}
+              onSubmit={async (vals) => {
+                const id = editing.id;
+                await toast.promise(
+                  updateMutation.mutateAsync({ id, data: vals as Partial<Resident> }),
+                  {
+                    loading: "Updating resident...",
+                    success: "Resident updated",
+                    error: "Failed to update resident",
+                  },
+                );
+                setEditing(null);
+              }}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* View drawer */}
+      <Sheet open={!!viewing} onOpenChange={(o) => !o && setViewing(null)}>
+        <SheetContent>
+          <SheetHeader>
+            <SheetTitle>Resident Details</SheetTitle>
+          </SheetHeader>
+          {viewing && (
+            <div className="mt-4 space-y-2 text-sm">
+              <div>
+                <span className="font-medium">Name: </span>
+                {viewing.first_name} {viewing.middle_name ?? ""} {viewing.last_name}
+              </div>
+              <div>
+                <span className="font-medium">Age: </span>
+                {viewing.age}
+              </div>
+              <div>
+                <span className="font-medium">Gender: </span>
+                {viewing.gender}
+              </div>
+              <div>
+                <span className="font-medium">Barangay: </span>
+                {viewing.barangay}
+              </div>
+              <div>
+                <span className="font-medium">Address: </span>
+                {viewing.address}
+              </div>
+              <div>
+                <span className="font-medium">Occupation: </span>
+                {viewing.occupation ?? "-"}
+              </div>
+              <div>
+                <span className="font-medium">Civil Status: </span>
+                {viewing.civil_status}
+              </div>
+              <div>
+                <span className="font-medium">Contact #: </span>
+                {viewing.contact_number ?? "-"}
+              </div>
+              <div>
+                <span className="font-medium">Created: </span>
+                {viewing.created_at ?? "-"}
+              </div>
+              <div>
+                <span className="font-medium">Updated: </span>
+                {viewing.updated_at ?? "-"}
+              </div>
+            </div>
+          )}
+        </SheetContent>
+      </Sheet>
     </Card>
   );
 }

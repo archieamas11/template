@@ -130,19 +130,13 @@ export function DataTableSliderFilter<TData>({
   return (
     <Popover>
       <PopoverTrigger asChild>
-        <Button variant="outline" size="sm" className="border-dashed">
+        <Button variant="outline" size="sm" className="border-dashed" type="button">
           {columnFilterValue ? (
-            <div
-              role="button"
-              aria-label={`Clear ${title} filter`}
-              tabIndex={0}
-              className="rounded-sm opacity-70 transition-opacity hover:opacity-100 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-              onClick={onReset}
-            >
-              <XCircle />
-            </div>
+            <span className="rounded-sm opacity-70 transition-opacity hover:opacity-100">
+              <XCircle aria-hidden="true" focusable="false" />
+            </span>
           ) : (
-            <PlusCircle />
+            <PlusCircle aria-hidden="true" focusable="false" />
           )}
           <span>{title}</span>
           {columnFilterValue ? (
@@ -226,10 +220,10 @@ export function DataTableSliderFilter<TData>({
           />
         </div>
         <Button
-          aria-label={`Clear ${title} filter`}
           variant="outline"
           size="sm"
           onClick={onReset}
+          type="button"
         >
           Clear
         </Button>

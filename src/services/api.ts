@@ -73,6 +73,10 @@ export const ResidentsService = {
     const res = await api.put(`/residents/update.php?id=${id}`, payload);
     return res.data as { message: string; resident: Resident };
   },
+  async delete(id: number) {
+    const res = await api.delete(`/residents/delete.php?id=${id}`);
+    return res.data as { message: string };
+  },
 };
 
 export default api;
