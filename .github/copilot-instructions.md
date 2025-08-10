@@ -1,7 +1,5 @@
 ---
-description: Ultracite Cursor Rules
-globs: "**/*.{ts,tsx,js,jsx}"
-alwaysApply: true
+applyTo: '**'
 ---
 
 - Don't use `accessKey` attribute on any HTML element.
