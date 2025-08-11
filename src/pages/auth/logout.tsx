@@ -2,14 +2,13 @@ import { useEffect } from 'react';
 import { useLogout } from '@/hooks/use-logout';
 
 export function LogoutPage() {
-  const logout = useLogout();
+	const logout = useLogout();
 
-  useEffect(() => {
-    // 🔄 Perform logout immediately on component mount
-    logout();
-  }, [logout]);
+	useEffect(() => {
+		logout();
+	}, [logout]);
 
-  return null;
+	return null;
 }
 
 export default LogoutPage;
