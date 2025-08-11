@@ -1,6 +1,6 @@
 "use client";
 import type { ReactNode } from 'react';
-import Component from '@/components/dashboard/user-dashboard/comp-585';
+import Component from '@/components/dashboard/user-dashboard/user-dashboard';
 
 interface UserLayoutProps { children: ReactNode }
 
