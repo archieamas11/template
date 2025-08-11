@@ -24,12 +24,14 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover"
 import { ThemeToggleButton } from "@/components/ui/theme-toggle-button"
+import { Link, NavLink } from "react-router-dom"
+import { cn } from "@/lib/utils"
 
 // Navigation links array to be used in both desktop and mobile menus
 const navigationLinks = [
-  { href: "#", label: "Home", icon: HouseIcon },
-  { href: "#", label: "Hash", icon: HashIcon },
-  { href: "#", label: "Groups", icon: UsersRound },
+  { to: "/dashboard", label: "Home", icon: HouseIcon },
+  { to: "/dashboard/hash", label: "Hash", icon: HashIcon },
+  { to: "/dashboard/groups", label: "Groups", icon: UsersRound },
 ]
 
 export default function Component() {
@@ -47,6 +49,8 @@ export default function Component() {
                 className="group size-8 md:hidden"
                 variant="ghost"
                 size="icon"
+                aria-label="Toggle menu"
+                type="button"
               >
                 <svg
                   className="pointer-events-none"
@@ -60,6 +64,7 @@ export default function Component() {
                   strokeLinejoin="round"
                   xmlns="http://www.w3.org/2000/svg"
                 >
+                  <title>Menu</title>
                   <path
                     d="M4 12L20 12"
                     className="origin-center -translate-y-[7px] transition-all duration-300 ease-[cubic-bezier(.5,.85,.25,1.1)] group-aria-expanded:translate-x-0 group-aria-expanded:translate-y-0 group-aria-expanded:rotate-[315deg]"
@@ -82,16 +87,27 @@ export default function Component() {
                     const Icon = link.icon
                     return (
                       <NavigationMenuItem key={index} className="w-full">
-                        <NavigationMenuLink
-                          href={link.href}
-                          className="flex-row items-center gap-2 py-1.5"
-                        >
-                          <Icon
-                            size={16}
-                            className="text-muted-foreground"
-                            aria-hidden="true"
-                          />
-                          <span>{link.label}</span>
+                        <NavigationMenuLink asChild>
+                          <NavLink
+                            to={link.to}
+                            end={link.to === "/dashboard"}
+                            className={({ isActive }) =>
+                              cn(
+                                "flex w-full flex-row items-center gap-2 rounded-md py-1.5 px-2",
+                                isActive
+                                  ? "bg-muted text-foreground"
+                                  : "text-muted-foreground hover:bg-accent hover:text-foreground",
+                              )
+                            }
+                            aria-label={link.label}
+                          >
+                            <Icon
+                              size={16}
+                              className="text-current"
+                              aria-hidden="true"
+                            />
+                            <span>{link.label}</span>
+                          </NavLink>
                         </NavigationMenuLink>
                       </NavigationMenuItem>
                     )
@@ -101,9 +117,9 @@ export default function Component() {
             </PopoverContent>
           </Popover>
           <div className="flex items-center gap-6">
-            <a href="#" className="text-primary hover:text-primary/90">
+            <Link to="/dashboard" className="text-primary hover:text-primary/90">
               <Logo />
-            </a>
+            </Link>
             {/* Search form */}
             <div className="relative">
               <Input
@@ -125,13 +141,24 @@ export default function Component() {
               const Icon = link.icon
               return (
                 <NavigationMenuItem key={index}>
-                  <NavigationMenuLink
-                    href={link.href}
-                    className="flex size-8 items-center justify-center p-1.5"
-                    title={link.label}
-                  >
-                    <Icon aria-hidden="true" />
-                    <span className="sr-only">{link.label}</span>
+                  <NavigationMenuLink asChild>
+                    <NavLink
+                      to={link.to}
+                      end={link.to === "/dashboard"}
+                      title={link.label}
+                      className={({ isActive }) =>
+                        cn(
+                          "flex size-8 items-center justify-center rounded-md p-1.5",
+                          isActive
+                            ? "bg-muted text-foreground"
+                            : "text-muted-foreground hover:bg-accent hover:text-foreground",
+                        )
+                      }
+                      aria-label={link.label}
+                    >
+                      <Icon aria-hidden="true" />
+                      <span className="sr-only">{link.label}</span>
+                    </NavLink>
                   </NavigationMenuLink>
                 </NavigationMenuItem>
               )
@@ -141,13 +168,14 @@ export default function Component() {
         {/* Right side */}
         <div className="flex flex-1 items-center justify-end gap-4">
           <div className="flex items-center gap-2">
-          <ThemeToggleButton start="top-right" variant="circle-blur" buttonVariant="ghost" />
-          {/* Messages */}
+            <ThemeToggleButton start="top-right" variant="circle-blur" buttonVariant="ghost" />
+            {/* Messages */}
             <Button
               size="icon"
               variant="ghost"
               className="text-muted-foreground relative size-8 rounded-full shadow-none"
               aria-label="Open notifications"
+              type="button"
             >
               <MailIcon size={16} aria-hidden="true" />
               <div
