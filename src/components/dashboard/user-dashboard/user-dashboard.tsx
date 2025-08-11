@@ -23,6 +23,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover"
+import { ThemeToggleButton } from "@/components/ui/theme-toggle-button"
 
 // Navigation links array to be used in both desktop and mobile menus
 const navigationLinks = [
@@ -140,7 +141,8 @@ export default function Component() {
         {/* Right side */}
         <div className="flex flex-1 items-center justify-end gap-4">
           <div className="flex items-center gap-2">
-            {/* Messages */}
+          <ThemeToggleButton start="top-right" variant="circle-blur" buttonVariant="ghost" />
+          {/* Messages */}
             <Button
               size="icon"
               variant="ghost"
