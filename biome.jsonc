@@ -6,7 +6,12 @@
     "includes": ["**/*.ts", "**/*.tsx", "!**/components/**/*"]
   },
   "formatter": {
-    "includes": ["**/*.ts", "**/*.tsx", "!**/components/**/*"],
+    "includes": [
+      "**/*.ts",
+      "**/*.tsx",
+      "!**/components/**/*",
+      "!node_modules/**"
+    ],
     "enabled": true,
     "formatWithErrors": false,
     "attributePosition": "auto",
@@ -165,7 +170,7 @@
       "includes": ["**/*.{ts,tsx}"],
       "javascript": {
         "formatter": {
-          "arrowParentheses":"always",
+          "arrowParentheses": "always",
           "bracketSameLine": false,
           "bracketSpacing": true,
           "jsxQuoteStyle": "double",
