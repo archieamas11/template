@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import type { RouteObject } from 'react-router-dom';
 import { BrowserRouter, Navigate, Outlet, useLocation, useRoutes } from 'react-router-dom';
 import { LoginPage } from '@/pages/auth/login';
@@ -13,38 +13,28 @@ import { UserDashboardPage } from '@/pages/dashboard/user/user';
 import { LandingPage } from '@/pages/public/landing';
 import { UnauthorizedPage } from '@/pages/public/unauthorized';
 import { AuthService } from '@/services/auth.api';
+import { useQuery } from '@tanstack/react-query';
 
 function useAuth() {
-  const [authLoading, setAuthLoading] = useState(true);
-  const [authUser, setAuthUser] = useState<{ id: number; username: string; isAdmin: number | string } | null>(null);
+  const token = localStorage.getItem('token');
 
-  useEffect(() => {
-    let cancelled = false;
-    const token = localStorage.getItem('token');
-    if (!token) {
-      setAuthLoading(false);
-      return;
-    }
-    AuthService.me()
-      .then((data) => {
-        if (!cancelled) {
-          setAuthUser(data.user);
-        }
-      })
-      .catch(() => {
-        if (!cancelled) {
-          localStorage.removeItem('token');
-        }
-      })
-      .finally(() => {
-        if (!cancelled) {
-          setAuthLoading(false);
-        }
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, []);
+  const { data: authUser, isLoading: authLoading } = useQuery({
+    queryKey: ['authUser'],
+    queryFn: async () => {
+      if (!token) {
+        return null;
+      }
+      try {
+        const res = await AuthService.me();
+        return res.user;
+      } catch {
+        localStorage.removeItem('token');
+        return null;
+      }
+    },
+    enabled: !!token,
+    retry: false,
+  });
 
   return { authLoading, authUser };
 }

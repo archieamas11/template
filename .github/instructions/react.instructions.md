@@ -171,3 +171,32 @@ useEffect(() => {
 ```tsx
 const theme = user?.preferences?.theme ?? 'default';
 ```
+
+## Promise Handling Rule
+- Always use `async/await` instead of `.then()` when working with Promises in React or JavaScript.  
+- Never chain `.then()` for handling results or errors.  
+- Use `try/catch` for error handling.  
+- If converting old code, rewrite `.then()` chains into clean `async/await` blocks.  
+
+### ❌ Avoid: .then chaining for async logic
+
+```tsx
+fetchData()
+  .then((res) => {
+    setData(res);
+  })
+  .catch((err) => {
+    console.error(err);
+  });
+```
+
+### ✅ Prefer: Async/await with error handling
+
+```tsx
+try {
+  const res = await fetchData();
+  setData(res);
+} catch (err) {
+  console.error(err);
+}
+```

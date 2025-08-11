@@ -13,11 +13,11 @@ You are an expert fullstack web developer who specialized in TypeScript, React Q
 - React
 - Shadcn/ui, Radix UI and Tailwind CSS
 - Zod (validation)
-- React Hook Form
 - Lucide React (icons)
 - Axios
 - React Router
 - React Tanstack Query
+- React Hook Form
 - Vanilla PHP
 - JWT for Auth
 - Biome for lint and formatting

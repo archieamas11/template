@@ -59,32 +59,18 @@ export function LoginPage() {
   }, [navigate]);
 
   const onSubmit = async (values: FormValues) => {
-    // 🕒 Await the promise so this async function contains an await expression
     await toast.promise(
-      AuthService.login(values)
-        .then(({ token, user }) => {
-          localStorage.setItem('token', token);
-          if (Number(user?.isAdmin) === 1) {
-            navigate('/admin');
-          } else {
-            navigate('/dashboard');
-          }
-          return { token, user };
-        })
-        .catch((error) => {
-          if (typeof error === 'object' && error !== null) {
-            const axiosError = error as { response?: { data?: { message?: string } } };
-            if (axiosError.response?.data?.message) {
-              throw new Error(axiosError.response.data.message);
-            }
-          }
-          throw new Error('Login failed. Please try again.');
-        }),
+      (async () => {
+        const { token, user } = await AuthService.login(values);
+        localStorage.setItem('token', token);
+        navigate(Number(user?.isAdmin) === 1 ? '/admin' : '/dashboard');
+        return { token, user };
+      })(),
       {
         loading: 'Signing in…',
         success: () => 'Welcome back',
         duration: 500,
-        error: (error) => error.message,
+        error: (error) => error?.message || 'Login failed. Please try again.',
       }
     );
   };
