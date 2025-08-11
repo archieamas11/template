@@ -14,12 +14,13 @@ import { LandingPage } from '@/pages/public/landing';
 import { UnauthorizedPage } from '@/pages/public/unauthorized';
 import { AuthService } from '@/services/auth.api';
 import { useQuery } from '@tanstack/react-query';
+import { useLocalStorage } from '@/hooks/use-local-storage';
 
 function useAuth() {
-  const token = localStorage.getItem('token');
+  const [token] = useLocalStorage('token');
 
   const { data: authUser, isLoading: authLoading } = useQuery({
-    queryKey: ['authUser'],
+    queryKey: ['authUser', token],
     queryFn: async () => {
       if (!token) {
         return null;
@@ -28,12 +29,17 @@ function useAuth() {
         const res = await AuthService.me();
         return res.user;
       } catch {
+        // 🧹 Clear invalid token
         localStorage.removeItem('token');
+        window.dispatchEvent(new Event('localStorage-change'));
         return null;
       }
     },
     enabled: !!token,
     retry: false,
+    // 🔄 Ensure query refetches when token changes
+    staleTime: 0,
+    gcTime: 0,
   });
 
   return { authLoading, authUser };

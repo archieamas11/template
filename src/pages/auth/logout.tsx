@@ -1,14 +1,13 @@
 import { useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLogout } from '@/hooks/use-logout';
 
 export function LogoutPage() {
-  const navigate = useNavigate();
+  const logout = useLogout();
 
   useEffect(() => {
-    localStorage.removeItem('token');
-    const id = setTimeout(() => navigate('/login', { replace: true }), 50);
-    return () => clearTimeout(id);
-  }, [navigate]);
+    // 🔄 Perform logout immediately on component mount
+    logout();
+  }, [logout]);
 
   return null;
 }

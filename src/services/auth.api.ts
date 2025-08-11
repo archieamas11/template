@@ -16,4 +16,7 @@ export const AuthService = {
     const res = await api.get('auth/me.php');
     return res.data as { user: User };
   },
+  logout() {
+    localStorage.removeItem('token');
+  },
 };

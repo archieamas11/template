@@ -1,4 +1,5 @@
 import { zodResolver } from '@hookform/resolvers/zod';
+import { useQueryClient } from '@tanstack/react-query';
 import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
@@ -20,6 +21,7 @@ type FormValues = z.infer<typeof schema>;
 
 export function LoginPage() {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
     defaultValues: {
@@ -31,7 +33,7 @@ export function LoginPage() {
 
   const { isSubmitting } = form.formState;
 
-  // If token exists, validate and redirect to dashboard
+  // 🔍 Check existing session on mount
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (!token) {
@@ -52,17 +54,27 @@ export function LoginPage() {
         return 'Already signed in';
       },
       error: (_error) => {
+        // 🧹 Clear invalid session
         localStorage.removeItem('token');
+        window.dispatchEvent(new Event('localStorage-change'));
+        queryClient.clear();
         return 'Session expired, please login';
       },
     });
-  }, [navigate]);
+  }, [navigate, queryClient]);
 
   const onSubmit = async (values: FormValues) => {
     await toast.promise(
       (async () => {
         const { token, user } = await AuthService.login(values);
         localStorage.setItem('token', token);
+        
+        // � Notify localStorage change to trigger reactive hooks
+        window.dispatchEvent(new Event('localStorage-change'));
+        
+        // �🔄 Clear cache to force refetch with new token
+        queryClient.clear();
+        
         navigate(Number(user?.isAdmin) === 1 ? '/admin' : '/dashboard');
         return { token, user };
       })(),

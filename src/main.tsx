@@ -6,7 +6,7 @@ import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { Toaster } from 'sonner';
 import { ThemeProvider } from '@/components/providers/theme-provider';
 import { AppRoutes } from '@/routes';
-import queryClient from '@/store/query-clinet';
+import queryClient from '@/store/query-client';
 
 const rootEl = document.getElementById('root');
 if (rootEl) {

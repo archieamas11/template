@@ -27,10 +27,11 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar"
-import { useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
 import { type User } from '@/services/auth.api'
 import { cn } from '../../lib/utils';
+import { useLogout } from '@/hooks/use-logout';
+
 export function NavUser({
   user,
 }: {
@@ -41,23 +42,22 @@ export function NavUser({
   }
 }) {
   const { isMobile } = useSidebar()
-  const navigate = useNavigate()
+  const logout = useLogout();
 
   const handleLogout = () => {
     const action = new Promise<void>((resolve) => {
-      // Clear token and redirect. Use a short timeout to allow toast to render.
-      localStorage.removeItem('token')
-        navigate('/', { replace: true })
-        resolve()
-    })
+      // 🔄 Perform logout with proper cleanup
+      logout();
+      resolve();
+    });
 
     toast.promise(action, {
       loading: 'Logging out...',
       success: 'Logged out successfully',
       error: 'Failed to log out',
       duration: 500,
-    })
-  }
+    });
+  };
 
   return (
     <SidebarMenu>
@@ -74,7 +74,7 @@ export function NavUser({
               </Avatar>
               <div className="grid flex-1 text-left text-sm leading-tight">
                 <span className="truncate font-medium">{user.username}</span>
-                <span className={cn("truncate text-xs")}>{user.isAdmin === 1 ? 'User' : 'Admin'}</span>
+                <span className={cn("truncate text-xs")}>{user.isAdmin === 1 ? 'Admin' : 'User'}</span>
               </div>
               <ChevronsUpDown className="ml-auto size-4" />
             </SidebarMenuButton>

@@ -41,9 +41,10 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
             <Separator orientation="vertical" className="mr-2 data-[orientation=vertical]:h-4" />
             <Breadcrumb>
               <BreadcrumbList>
-                {crumbs.map((c, idx) => (
-                  <>
-                    <BreadcrumbItem key={`item-${idx}`} className={idx === 0 ? 'hidden md:block' : undefined}>
+                {crumbs.map((c, idx) => {
+                  const key = `crumb-${idx}-${c.path}`
+                  return [
+                    <BreadcrumbItem key={key} className={idx === 0 ? 'hidden md:block' : undefined}>
                       {c.isLast ? (
                         <BreadcrumbPage>{c.label}</BreadcrumbPage>
                       ) : (
@@ -51,12 +52,12 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
                           <Link to={c.path}>{c.label}</Link>
                         </BreadcrumbLink>
                       )}
-                    </BreadcrumbItem>
-                    {idx < crumbs.length - 1 && (
-                      <BreadcrumbSeparator key={`sep-${idx}`} className={idx === 0 ? 'hidden md:block' : undefined} />
-                    )}
-                  </>
-                ))}
+                    </BreadcrumbItem>,
+                    idx < crumbs.length - 1 && (
+                      <BreadcrumbSeparator key={`sep-${key}`} className={idx === 0 ? 'hidden md:block' : undefined} />
+                    )
+                  ]
+                })}
               </BreadcrumbList>
             </Breadcrumb>
           </div>
