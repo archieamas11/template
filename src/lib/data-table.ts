@@ -20,13 +20,18 @@ export function getCommonPinningStyles<TData>({
     isPinned === "right" && column.getIsFirstColumn("right");
 
   return {
-    boxShadow: withBorder
-      ? isLastLeftPinnedColumn
-        ? "-4px 0 4px -4px hsl(var(--border)) inset"
-        : isFirstRightPinnedColumn
-          ? "4px 0 4px -4px hsl(var(--border)) inset"
-          : undefined
-      : undefined,
+    boxShadow: (() => {
+      if (!withBorder) {
+        return;
+      }
+      if (isLastLeftPinnedColumn) {
+        return "-4px 0 4px -4px hsl(var(--border)) inset";
+      }
+      if (isFirstRightPinnedColumn) {
+        return "4px 0 4px -4px hsl(var(--border)) inset";
+      }
+      return;
+    })(),
     left: isPinned === "left" ? `${column.getStart("left")}px` : undefined,
     right: isPinned === "right" ? `${column.getAfter("right")}px` : undefined,
     opacity: isPinned ? 0.97 : 1,

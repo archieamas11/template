@@ -1,5 +1,5 @@
 {
-  "$schema": "https://biomejs.dev/schemas/2.1.2/schema.json",
+  "$schema": "https://biomejs.dev/schemas/2.1.4/schema.json",
   "extends": ["ultracite"],
   "linter": {
     "rules": { "recommended": false },
@@ -8,9 +8,11 @@
   "formatter": {
     "includes": ["**/*.ts", "**/*.tsx", "!**/components/**/*"],
     "enabled": true,
-    "lineWidth": 150,
-    "indentStyle": "space",
+    "formatWithErrors": false,
+    "attributePosition": "auto",
+    "indentStyle": "tab",
     "indentWidth": 2,
+    "lineWidth": 150,
     "lineEnding": "lf"
   },
   "files": {
@@ -162,6 +164,15 @@
     {
       "includes": ["**/*.{ts,tsx}"],
       "javascript": {
+        "formatter": {
+          "arrowParentheses":"always",
+          "bracketSameLine": false,
+          "bracketSpacing": true,
+          "jsxQuoteStyle": "double",
+          "quoteProperties": "asNeeded",
+          "semicolons": "always",
+          "trailingCommas": "all"
+        },
         "globals": [
           "onanimationend",
           "ongamepadconnected",
@@ -289,6 +300,11 @@
           "onpagereveal",
           "onemptied"
         ]
+      },
+      "json": {
+        "formatter": {
+          "trailingCommas": "none"
+        }
       }
     }
   ]
