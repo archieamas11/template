@@ -195,7 +195,7 @@ export default function ResidentsTable() {
   });
 
   const archiveMutation = useMutation({
-    mutationFn: (id: number) => ResidentsService.delete(id),
+    mutationFn: (id: number) => ResidentsService.archive(id),
     onMutate: async (id) => {
       const key = ["residents", params] as const;
       await queryClient.cancelQueries({ queryKey: key });
