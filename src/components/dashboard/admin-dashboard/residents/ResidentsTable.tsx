@@ -122,7 +122,7 @@ export default function ResidentsTable() {
     [q, pagination.pageIndex, pagination.pageSize, sortBy, sortDir, gender, barangay],
   );
 
-  const { data, isLoading, isFetching } = useResidents(params);
+  const { data, isLoading } = useResidents(params);
   const queryClient = useQueryClient();
 
   // Build dynamic Barangay options from current page data
