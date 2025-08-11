@@ -405,9 +405,6 @@ export default function ResidentsTable() {
               }}
               className="h-8 w-40 lg:w-56"
             />
-            {isFetching && (
-              <span className="text-xs text-muted-foreground">Refreshing…</span>
-            )}
             <Dialog open={openCreate} onOpenChange={setOpenCreate}>
               <DialogTrigger asChild>
                 <Button

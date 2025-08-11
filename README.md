@@ -67,28 +67,3 @@ export default tseslint.config([
   },
 ])
 ```
-
-# Template Starter
-
-- Frontend: React + TypeScript + Vite + Tailwind
-- Backend: Vanilla PHP + MySQL
-
-## Setup
-
-1. Create database `template` in MySQL.
-2. Import `backend/migrate.sql`.
-3. Copy `backend/.env.example` to `backend/.env` and adjust DB credentials.
-4. Serve PHP backend via Laragon: <http://localhost/template/backend>
-5. Start frontend: `npm run dev` (<http://localhost:5173>)
-
-## Auth
-
-- Login as admin: admin / admin123
-- Login as user: user / admin123
-
-## Routes
-
-- `/` Landing page
-- `/login` Login form
-- `/admin` Admin dashboard (requires isAdmin = 1)
-- `/dashboard` User dashboard
