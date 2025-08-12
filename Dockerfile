@@ -1,13 +1,10 @@
-# Stage 1 - Build
-FROM oven/bun:1 AS builder
 
-# Set working directory
+# ---- Build Stage ----
+FROM oven/bun:1 AS builder
 WORKDIR /app
 
-# Copy package files
-COPY package.json bun.lockb* ./
-
-# Install dependencies
+# Copy only dependency files first for better caching
+COPY package.json bun.lock* ./
 RUN bun install --frozen-lockfile
 
 # Copy the rest of the code
@@ -16,20 +13,31 @@ COPY . .
 # Build the app
 RUN bun run build
 
-# Stage 2 - Serve
+# ---- Production Stage ----
 FROM oven/bun:1 AS runner
-
 WORKDIR /app
 
-# Copy only the built files and package.json
-COPY --from=builder /app/dist ./dist
-COPY --from=builder /app/package.json .
+# Set environment for production
+ENV NODE_ENV=production
 
-# Install only production deps (if any)
+# Create a non-root user for security
+RUN adduser -D appuser
+USER appuser
+
+# Copy only the built output and minimal files
+COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/package.json ./
+COPY --from=builder /app/bun.lock* ./
+
+# Install only production dependencies
 RUN bun install --production --frozen-lockfile
 
 # Expose the port Vite preview will run on
 EXPOSE 4173
+
+# Healthcheck for container orchestration
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
+  CMD curl -f http://localhost:4173/ || exit 1
 
 # Start the app
 CMD ["bun", "run", "preview"]
