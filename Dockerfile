@@ -20,8 +20,6 @@ WORKDIR /app
 # Set environment for production
 ENV NODE_ENV=production
 
-
-
 # Copy only the built output and minimal files
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/package.json ./
@@ -32,10 +30,6 @@ RUN bun install --production --frozen-lockfile
 
 # Expose the port Vite preview will run on
 EXPOSE 4173
-
-# Healthcheck for container orchestration
-HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
-  CMD curl -f http://localhost:4173/ || exit 1
 
 # Start the app
 CMD ["bun", "run", "preview"]
