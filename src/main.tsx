@@ -10,15 +10,15 @@ import queryClient from '@/store/query-client';
 
 const rootEl = document.getElementById('root');
 if (rootEl) {
-  createRoot(rootEl).render(
-    <StrictMode>
-      <ThemeProvider attribute="class" defaultTheme="system" disableTransitionOnChange enableSystem>
-        <QueryClientProvider client={queryClient}>
-          <AppRoutes />
-          <Toaster position="top-right" richColors />
-          <ReactQueryDevtools initialIsOpen={false} />
-        </QueryClientProvider>
-      </ThemeProvider>
-    </StrictMode>
-  );
+	createRoot(rootEl).render(
+		<StrictMode>
+			<ThemeProvider attribute="class" defaultTheme="system" disableTransitionOnChange enableSystem>
+				<QueryClientProvider client={queryClient}>
+					<AppRoutes />
+					<Toaster position="top-right" richColors />
+					<ReactQueryDevtools initialIsOpen={false} />
+				</QueryClientProvider>
+			</ThemeProvider>
+		</StrictMode>,
+	);
 }
