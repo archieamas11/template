@@ -20,9 +20,7 @@ WORKDIR /app
 # Set environment for production
 ENV NODE_ENV=production
 
-# Create a non-root user for security
-RUN adduser -D appuser
-USER appuser
+
 
 # Copy only the built output and minimal files
 COPY --from=builder /app/dist ./dist
