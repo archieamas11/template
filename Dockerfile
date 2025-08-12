@@ -1,7 +1,10 @@
-
 # ---- Build Stage ----
 FROM oven/bun:1 AS builder
 WORKDIR /app
+
+# Pass Vite envs at build-time via build args (set them in Coolify)
+ARG VITE_API_URL
+ENV VITE_API_URL=${VITE_API_URL}
 
 # Copy only dependency files first for better caching
 COPY package.json bun.lock* ./
@@ -10,26 +13,20 @@ RUN bun install --frozen-lockfile
 # Copy the rest of the code
 COPY . .
 
-# Build the app
+# Build the app (Vite reads VITE_* from the environment at build time)
 RUN bun run build
 
 # ---- Production Stage ----
-FROM oven/bun:1 AS runner
-WORKDIR /app
+FROM nginx:1.27-alpine AS runner
 
-# Set environment for production
-ENV NODE_ENV=production
+# Copy nginx config for SPA routing and caching
+COPY nginx.conf /etc/nginx/conf.d/default.conf
 
-# Copy only the built output and minimal files
-COPY --from=builder /app/dist ./dist
-COPY --from=builder /app/package.json ./
-COPY --from=builder /app/bun.lock* ./
+# Copy static assets
+COPY --from=builder /app/dist /usr/share/nginx/html
 
-# Install only production dependencies
-RUN bun install --production --frozen-lockfile
+# Expose web port used by Nginx
+EXPOSE 80
 
-# Expose the port Vite preview will run on
-EXPOSE 4173
-
-# Start the app
-CMD ["bun", "run", "preview"]
+# Start Nginx
+CMD ["nginx", "-g", "daemon off;"]
